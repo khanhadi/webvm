@@ -265,19 +265,19 @@ __      __   _  __   ____  __
 	async function runBash()
 	{
 		// cmd, cwd, args and env are replaced by the Github actions workflow.
-		var cmd = CMD;
-		var args = ARGS;
-		var env = ENV;
-		var cwd = CWD;
-		var device_type = DEVICE_TYPE;
-		var image_url = IMAGE_URL;
+		// var cmd = CMD;
+		// var args = ARGS;
+		// var env = ENV;
+		// var cwd = CWD;
+		// var device_type = DEVICE_TYPE;
+		// var image_url = IMAGE_URL;
 		// Reasonable defaults for local deployments
-		// var cmd = "/bin/bash";
-		// var args = ["--login"];
-		// var env = ["HOME=/home/user", "TERM=xterm", "USER=user", "SHELL=/bin/bash", "EDITOR=vim", "LANG=en_US.UTF-8", "LC_ALL=C"];
-		// var cwd = "/home/user";
-		// var device_type = "bytes";
-		// var image_url = "/your_local_image.ext2";
+		var cmd = "/bin/bash";
+		var args = ["--login"];
+		var env = ["HOME=/home/user", "TERM=xterm", "USER=user", "SHELL=/bin/bash", "EDITOR=vim", "LANG=en_US.UTF-8", "LC_ALL=C"];
+		var cwd = "/home/user";
+		var device_type = "bytes";
+		var image_url = "./debian_mini_20230519_5022088024.ext2";
 		const structure = {
 			cmd: cmd,
 			args: args,
