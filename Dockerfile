@@ -1,27 +1,43 @@
 FROM --platform=i386 i386/debian:buster
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Add architecture for RISC-V packages
-RUN dpkg --add-architecture riscv64
-
 RUN apt-get clean && apt-get update && apt-get -y upgrade
-RUN apt-get -y install apt-utils gcc vim unzip ruby nodejs \
-    fakeroot dbus whiptail hexedit \
-    patch wamerican ucf manpages \
-    file luajit make lua50 dialog curl \
-    less cowsay netcat-openbsd \
-    qemu-system-misc \
-    git build-essential gdb-multiarch \
-    gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu \
-    libc6-dev-riscv64-cross
+
+# Install the necessary packages for building xv6 and running QEMU (for x86)
+RUN apt-get -y install \
+    apt-utils \
+    gcc \
+    make \
+    vim \
+    qemu-system-i386 \
+    git \
+    gdb-multiarch \
+    build-essential
 
 RUN useradd -m user && echo "user:password" | chpasswd
 WORKDIR /home/user/
-RUN git clone https://github.com/mit-pdos/xv6-riscv.git xv6
-RUN echo 'root:password' | chpasswd
 
-ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="C"
-ENV PATH="/usr/riscv64-linux-gnu/bin:${PATH}"
+# Clone the original xv6 (32-bit x86 version)
+RUN git clone https://github.com/mit-pdos/xv6-public.git xv6
+
+# Change ownership of the xv6 directory to the user
+RUN chown -R user:user /home/user/xv6
+
+ENV HOME="/home/user" \
+    TERM="xterm" \
+    USER="user" \
+    SHELL="/bin/bash" \
+    EDITOR="vim" \
+    LANG="en_US.UTF-8" \
+    LC_ALL="C"
 
 USER user
-CMD [ "/bin/bash" ]
+
+# Set xv6 as the working directory
+WORKDIR /home/user/xv6
+
+# Build xv6 using the provided Makefile
+RUN make clean && make
+
+# Run xv6 in QEMU
+CMD ["qemu-system-i386", "-hda", "fs.img", "-m", "512", "-nographic", "-kernel", "kernel"]

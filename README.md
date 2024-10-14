@@ -1,109 +1,85 @@
-# WebVM
+# WebVM xv6: Our Wild Ride Through Browser-Based OS Emulation
 
-[![Discord server](https://img.shields.io/discord/988743885121548329?color=%235865F2&logo=discord&logoColor=%23fff)](https://discord.gg/yWRr2YnD9c)
-[![Issues](https://img.shields.io/github/issues/leaningtech/webvm)](https://github.com/leaningtech/webvm/issues)
+Hey there! Welcome to our CheerpX hackathon project. Let us tell you about our crazy attempt to run an entire operating system (well, a mini one) in your web browser. 
 
-This repository hosts the source code for [https://webvm.io](https://webvm.io), a Linux virtual machine that runs in your browser.
+## What Were We Thinking?
 
-<img src="assets/welcome_to_WebVM_slim.png" width="95%">
+The hackathon theme was "Crafting the Impossible," and we took that a little too seriously! We thought, "Hey, wouldn't it be cool to run xv6 (a teaching OS from one of our classes this semester) inside WebVM?" Spoiler alert: It was as hard as it sounds, but what a journey it was!
 
-WebVM is a server-less virtual environment running fully client-side in HTML5/WebAssembly. It's designed to be Linux ABI-compatible. It runs an unmodified Debian distribution including many native development toolchains.
+## Our Rollercoaster Ride
 
-WebVM is powered by the CheerpX virtualization engine, and enables safe, sandboxed client-side execution of x86 binaries on any browser. CheerpX includes an x86-to-WebAssembly JIT compiler, a virtual block-based file system, and a Linux syscall emulator. 
+### First Stop: RISC-V Town
+We started off ambitious. Like, really ambitious. We tried to run a 64-bit RISC-V version of xv6 on a 32-bit x86 emulated environment. In a browser. Yeah, we know.
 
-# Enable networking
+- We crafted a custom Dockerfile with everything we thought we needed.
+- Wrote a build script to automate creating ext2 disk images for us.
+- Tried to bend WebVM to our will.
+- Learned more about cross-architecture emulation than we ever thought we needed to know.
 
-- Click "Connect via Tailscale" in the page header.
-- Log in to Tailscale (create an account if you don't have one).
-- If you are unfamiliar with Tailscale or would like additional information see [WebVM and Tailscale](/docs/Tailscale.md).
+### Pivot City: x86 Valley
+When RISC-V didn't pan out, did we give up? Nah! We switched gears to the (older) 32-bit x86 version of xv6. New plan, but same crazy energy.
 
-# Fork, deploy, customize
+- Whipped up a new Dockerfile faster than you can say "virtualization."
+- Battled with building and test x86 containers on an M1 Mac (fun times!).
+- Tried to sweet-talk WebVM into playing nice with our xv6 files.
 
-<img src="/assets/fork_deploy_instructions.gif" alt="deploy_instructions_gif" width="90%">
+## The Plot Twists (aka Challenges)
 
-- Fork the repository.
-- Enable Github pages in settings.
-	- Click on `Settings`.
-	- Go to the `Pages` section.
-	- Select `Github Actions` as the source.
-        - If you are using a custom domain, ensure `Enforce HTTPS` is enabled. 
-- Run the workflow.
-	- Click on `Actions`.
-	- Accept the prompt. This is required only once to enable Actions for your fork.
-	- Click on the workflow named `Deploy`.
-	- Click `Run workflow` and then once more `Run workflow` in the menu.
-- After a few seconds a new `Deploy` workflow will start, click on it to see details.
-- After the workflow completes, which takes a few minutes, it will show the URL below the `deploy_to_github_pages` job.
+### QEMU
 
-<img src="/assets/result.png" width="70%" >
+A crucial part of our project involved working with QEMU, the machine emulator. Here's an overview of our experience:
 
-You can now customize `dockerfiles/debian_mini` to suits your needs, or make a new Dockerfile from scratch. Use the `Path to Dockerfile` workflow parameter to select it.
+1. **Installation**: We successfully installed QEMU in our Docker container as part of our setup.
 
-# Local deployment
+2. **Consistent Issues**: Across all versions of QEMU we tried (for both RISC-V and x86), we encountered the same fundamental challenges.
 
-From a local `git clone`
+3. **Missing Libraries**: The primary issue was missing libraries, particularly `libvirglrenderer.so.0`. This problem persisted regardless of the QEMU version or target architecture.
 
-- Download the `debian_mini` Ext2 image from [https://github.com/leaningtech/webvm/releases/](https://github.com/leaningtech/webvm/releases/).
-	- You can also build your own by selecting the "Upload GitHub release" workflow option.
-	- Place the image in the repository root folder.
-- Edit `index.html`.
-	- Uncomment the default values for `CMD`, `ARGS`, `ENV` and `CWD`.
-	- Replace `DEVICE_TYPE` with `"bytes"`.
-	- Replace `IMAGE_URL` with the name of the Ext2 image. For example `"debian_mini_20230519_5022088024.ext2"`.
-- Start a local HTTP server.
-- Enjoy your local WebVM.
+4. **WebVM Compatibility**: Even after addressing container-level issues, integrating QEMU with WebVM presented significant challenges. These difficulties were consistent across our attempts.
 
-# Example customization: Python3 REPL
+### Other Challenges
 
-The `Deploy` workflow takes into account the `CMD` specified in the Dockerfile. To build a REPL you can simply apply this patch and deploy.
+1. **Architecture Mismatch Mayhem**: Trying to run 64-bit stuff in a 32-bit world. I don't even know why we tried this.
 
-```diff
-diff --git a/dockerfiles/debian_mini b/dockerfiles/debian_mini
-index 2878332..1f3103a 100644
---- a/dockerfiles/debian_mini
-+++ b/dockerfiles/debian_mini
-@@ -15,4 +15,4 @@ WORKDIR /home/user/
- # We set env, as this gets extracted by Webvm. This is optional.
- ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="C"
- RUN echo 'root:password' | chpasswd
--CMD [ "/bin/bash" ]
-+CMD [ "/usr/bin/python3" ]
-```
+2. **The Emulation Layer Cake**: We were dealing with multiple layers of virtualization and emulation:
+	- Layer 1: WebVM emulating a 32-bit x86 environment in the browser
+	- Layer 2: Our Docker container running on the emulated WebVM environment
+	- Layer 3: QEMU attempting to emulate either RISC-V or x86 within the container
+	- Layer 4: The xv6 operating system running on the QEMU-emulated hardware
 
-# Bugs and Issues
+	Each layer added complexity and potential performance overhead, creating a challenging environment for running an operating system.
 
-Please use [Issues](https://github.com/leaningtech/webvm/issues) to report any bug.
-Or come to say hello / share your feedback on [Discord](https://discord.gg/yTNZgySKGa).
+## What We Learned (Besides Humility)
 
-# More links
+1. Emulation layers are like onions. They have layers, and sometimes they make you cry.
+3. Cross-platform development is not for the faint of heart.
+4. WebVM is cool.
+5. Dockerfiles can be an art form. A confusing, complex art form.
 
-- [WebVM: server-less x86 virtual machines in the browser](https://leaningtech.com/webvm-server-less-x86-virtual-machines-in-the-browser/)
-- [WebVM: Linux Virtualization in WebAssembly with Full Networking via Tailscale](https://leaningtech.com/webvm-virtual-machine-with-networking-via-tailscale/)
-- [Mini.WebVM: Your own Linux box from Dockerfile, virtualized in the browser via WebAssembly](https://leaningtech.com/mini-webvm-your-linux-box-from-dockerfile-via-wasm/)
-- Reference GitHub Pages deployment: [Mini.WebVM](https://mini.webvm.io)
-- [Crafting the Impossible: X86 Virtualization in the Browser with WebAssembly](https://www.youtube.com/watch?v=VqrbVycTXmw) Talk at JsNation 2022
+In all honesty and seriousness, this was a deep dive into unchartered waters for us, we had:
+- No experience with Dockerfiles
+- Limited understanding of WebAssembly
+- Basic knowledge of operating systems from our xv6 class
 
-# Thanks to... 
-This project depends on:
-- [CheerpX](https://labs.leaningtech.com/cheerpx), made by [Leaning Technologies](https://leaningtech.com) for x86 virtualization and Linux emulation
-- xterm.js, [https://xtermjs.org/](https://xtermjs.org/), for providing the Web-based terminal emulator
-- [Tailscale](https://tailscale.com/), for the networking component
-- [lwIP](https://savannah.nongnu.org/projects/lwip/), for the TCP/IP stack, compiled for the Web via [Cheerp](https://github.com/leaningtech/cheerp-meta)
+Through this challenge, we gained:
+- Practical skills in Docker, containers and cross-architecture builds
+- Deeper insights into WebAssembly and browser capabilities
+- A newfound appreciation for the complexities of systems programming and a curiosity for learning more
 
-# Versioning
+## The Grand Finale
 
-WebVM depends on the CheerpX x86-to-WebAssembly virtualization technology. A link to the current latest build is always available at [https://cheerpxdemos.leaningtech.com/publicdeploy/LATEST.txt](https://cheerpxdemos.leaningtech.com/publicdeploy/LATEST.txt). Builds of CheerpX are immutable and uniquely versioned. An example link would be:
+Did we get xv6 running in WebVM? Well, no. But did we learn a ton, pushed some boundaries, and had a blast doing it? Absolutely!
 
-`https://cheerpxdemos.leaningtech.com/publicdeploy/20230517_94/cx.js`
+We may not have crafted the impossible, but we sure gave it our best shot. This project opened our eyes to the wild world of WebAssembly, and we're excited to see what comes next.
 
-We strongly encourage users _not_ to use the latest build. Please directly use a specific build to avoid unexpected regressions. Since builds are immutable, if they work for you now they will keep working forever.
+If you want to spin up the try our attempt, We've uploaded a pre-built image.
 
-# License
+1. Clone the Repository: `git clone https://github.com/khanhadi/webvm.git`
 
-WebVM is released under the Apache License, Version 2.0.
+2. Download the Image:
+- Visit our GitHub releases page: https://github.com/khanhadi/webvm/releases/tag/v0.0.1
+- Download the ext2 file provided in the release.
 
-You are welcome to use, modify, and redistribute the contents of this repository.
+3. Move the downloaded ext2 file into the project directory you just cloned.
 
-The public CheerpX deployment is provided **as-is** and is **free to use** for technological exploration, testing and non-commercial uses. Downloading a CheerpX build for the purpose of hosting it elsewhere is not permitted.
-
-If you want to build a product on top of CheerpX/WebVM, please get in touch: sales@leaningtech.com
+4. Serve!
