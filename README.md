@@ -72,7 +72,7 @@ Did we get xv6 running in WebVM? Well, no. But did we learn a ton, pushed some b
 
 We may not have crafted the impossible, but we sure gave it our best shot. This project opened our eyes to the wild world of WebAssembly, and we're excited to see what comes next.
 
-If you want to spin up the try our attempt, We've uploaded a pre-built image.
+If you want to spin up and try our attempt, We've uploaded a pre-built image.
 
 1. Clone the Repository: `git clone https://github.com/khanhadi/webvm.git`
 
