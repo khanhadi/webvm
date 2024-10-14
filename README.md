@@ -20,7 +20,7 @@ We started off ambitious. Like, really ambitious. We tried to run a 64-bit RISC-
 When RISC-V didn't pan out, did we give up? Nah! We switched gears to the (older) 32-bit x86 version of xv6. New plan, but same crazy energy.
 
 - Whipped up a new Dockerfile faster than you can say "virtualization."
-- Battled with building and test x86 containers on an M1 Mac (fun times!).
+- Battled with building and testing x86 containers on an M1 Mac (fun times!).
 - Tried to sweet-talk WebVM into playing nice with our xv6 files.
 
 ## The Plot Twists (aka Challenges)
